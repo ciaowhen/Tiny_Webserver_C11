@@ -8,8 +8,10 @@
 #include <mutex>
 #include <string>
 #include <thread>
-#include "buffer.h"
+#include "../buffer/buffer.h"
 #include "blockqueue.h"
+#include <sys/stat.h>
+#include <assert.h>
 
 class Log
 {
@@ -22,11 +24,10 @@ public:
         LL_ERROR,
     };
 
-    void Init(int level = LL_DEBUG, const char *path = "./log", const char *name = ".log", int max_queue_capacity = 1024);
+    void Init(int level = LL_DEBUG, const char *path = "./log", const char *suffix = ".log", int max_queue_capacity = 1024);
+    void Write(int level, const char *format, ...);
     static Log *Instance();
     static void FlushLogThread();
-
-    void Write(int level, const char *format, ...);
     void Flush();
     int GetLevel();
     void SetLevel(int level);
@@ -36,6 +37,7 @@ private:
     Log();
     virtual ~Log();
     void AsyncWrite();
+    void AppendLogLevelTitle(int level);
 
 private:
     static const int LOG_PATH_LEN = 256;
@@ -43,7 +45,7 @@ private:
     static const int LOG_MAX_LINES = 50000;
 
     const char* m_path;
-    const char* m_name;
+    const char* m_suffix;
     int m_max_lines;
     int m_line_count;
     int m_today;
