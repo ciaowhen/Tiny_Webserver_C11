@@ -3,11 +3,12 @@
 //
 
 #include "sqlconnpool.h"
+#include "../log/log.h"
 #include <cassert>
 
 SqlConnPool::SqlConnPool():m_conn_max_num(0), m_free_conn_num(0), m_use_conn_num(0)
 {
-    m_sql_queue.clear();
+
 }
 
 SqlConnPool::~SqlConnPool()
@@ -31,7 +32,7 @@ void SqlConnPool::Init(const char *host, int port, const char *username, const c
             assert(sql);
         }
 
-        sql = mysql_real_conn(sql, host, username, password, dbname, port, nullptr, 0);
+        sql = mysql_real_connect(sql, host, username, password, dbname, port, nullptr, 0);
         if(!sql)
         {
             LOG_ERROR("Mysql Connect Error");
@@ -41,7 +42,7 @@ void SqlConnPool::Init(const char *host, int port, const char *username, const c
         m_sql_queue.emplace(sql);
     }
 
-    sem_init(m_sem, 0, conn_num);
+    sem_init(&m_sem, 0, conn_num);
     m_conn_max_num = conn_num;
     m_free_conn_num = conn_num;
 }
@@ -74,7 +75,7 @@ MYSQL* SqlConnPool::GetSqlConn()
         return nullptr;
     }
 
-    sem_wait(m_sem);
+    sem_wait(&m_sem);
     {
         std::lock_guard<std::mutex> locker(m_mutex);
         sql_conn = m_sql_queue.front();
@@ -96,7 +97,7 @@ void SqlConnPool::FreeConn(MYSQL *sql)
         std::lock_guard<std::mutex> locker(m_mutex);
         m_sql_queue.emplace(sql);
         m_free_conn_num++;
-        sem_post(m_sem);
+        sem_post(&m_sem);
     }
 
     return;

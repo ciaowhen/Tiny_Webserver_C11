@@ -4,6 +4,8 @@
 
 #include "buffer.h"
 #include <cassert>
+#include <cstring>
+#include <sys/uio.h>
 
 Buffer::Buffer(int max_buff_size): m_buffer(max_buff_size), m_read_pos(0)
 {
@@ -117,7 +119,7 @@ ssize_t Buffer::ReadFd(int fd, int *error)
     const ssize_t len = readv(fd, iov, 2);
     if(len < 0)
     {
-        *error = error;
+        *error = errno;
     }
     else if(static_cast<size_t>(len) <= writable)
     {
@@ -138,7 +140,7 @@ ssize_t Buffer::WriteFd(int fd, int *error)
     ssize_t len = write(fd, GetCurrReadPos(), read_size);
     if(len < 0)
     {
-        *error = error;
+        *error = errno;
     }
 
     Retrieve(len);

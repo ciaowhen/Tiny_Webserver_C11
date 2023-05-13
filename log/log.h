@@ -53,7 +53,7 @@ private:
     bool is_open;
     bool is_async;
     Buffer m_buff;
-    File *m_file;
+    FILE *m_file;
     std::unique_ptr<BlockDeque<std::string>> m_block_deque;
     std::unique_ptr<std::thread> m_write_thread;
     std::mutex m_mutex;
@@ -61,17 +61,17 @@ private:
 
 #define LOG_BASE(level, format, ...) \
     do{\
-        Log *log = log::Instance();  \
+        Log *log = Log::Instance();  \
         if(log->IsOpen() && log->GetLevel <= level) \
         {                            \
-            log->write(level, format, ##__VA_ARGE__); \
-            log->flush();            \
+            log->Write(level, format, ##__VA_ARGS__); \
+            log->Flush();            \
         }\
     }while(0);
 
-#define LOG_DEBUG(format, ...) do{LOG_BASE(LL_DEBUG, format, ##__VA_ARGS__)} while(0);
-#define LOG_INFO(format, ...) do{LOG_BASE(LL_INFO, format, ##__VA_ARGS__)} while(0);
-#define LOG_WARN(format, ...) do{LOG_BASE(LL_WARN, format, ##__VA_ARGS__)} while(0);
-#define LOG_ERROR(format, ...) do{LOG_BASE(LL_ERROR, format, ##__VA_ARGS__)} while(0);
+#define LOG_DEBUG(format, ...) do{LOG_BASE(0, format, ##__VA_ARGS__)} while(0);
+#define LOG_INFO(format, ...) do{LOG_BASE(1, format, ##__VA_ARGS__)} while(0);
+#define LOG_WARN(format, ...) do{LOG_BASE(2, format, ##__VA_ARGS__)} while(0);
+#define LOG_ERROR(format, ...) do{LOG_BASE(3, format, ##__VA_ARGS__)} while(0);
 
 #endif //TINY_WEBSERVER_C11_LOG_H
